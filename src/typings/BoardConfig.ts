@@ -1,5 +1,5 @@
-import type * as cg from 'chessground/types';
-import type { DrawShape, DrawBrushes } from 'chessground/draw';
+import type * as cg from 'nichessground/types';
+import type { DrawShape, DrawBrushes } from 'nichessground/draw';
 
 export type MoveableColor = 'white' | 'black' | 'both';
 

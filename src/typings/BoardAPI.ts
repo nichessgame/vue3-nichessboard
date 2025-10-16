@@ -1,5 +1,5 @@
 import type { PieceSymbol } from 'chess.js';
-import type { Key } from 'chessground/types';
+import type { Key } from 'nichessground/types';
 
 export interface LichessOpening {
   white: number;

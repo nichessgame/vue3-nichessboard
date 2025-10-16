@@ -1,4 +1,4 @@
-import type { Key } from 'chessground/types';
+import type { Key } from 'nichessground/types';
 import type { BoardConfig } from '@/typings/BoardConfig';
 
 export const possibleMovesWhite: Map<Key, Key[]> = new Map([
@@ -13,8 +13,10 @@ export const possibleMovesWhite: Map<Key, Key[]> = new Map([
   ['g2', ['g3', 'g4']],
   ['h2', ['h3', 'h4']],
 ]);
+//
+// TODO: Move this elsewhere. If the game is updated, but this isn't, it can cause silent bugs atm.
 export const initialPos =
-  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  '0|0-warrior-60,0-knight-60,0-assassin-10,0-mage-10,0-king-10,0-assassin-10,0-knight-60,0-warrior-60,0-pawn-30,0-pawn-30,0-pawn-30,0-pawn-30,0-pawn-30,0-pawn-30,0-pawn-30,0-pawn-30,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,1-pawn-30,1-pawn-30,1-pawn-30,1-pawn-30,1-pawn-30,1-pawn-30,1-pawn-30,1-pawn-30,1-warrior-60,1-knight-60,1-assassin-10,1-mage-10,1-king-10,1-assassin-10,1-knight-60,1-warrior-60,';
 
 // lichess default conf
 export const defaultBoardConfig: BoardConfig = {

@@ -1,16 +1,15 @@
 {
-  "name": "vue3-chessboard",
+  "name": "vue3-nichessboard",
   "version": "1.3.3",
-  "description": "vue3-chessboard is a component library for creating chess web apps with vue3",
-  "homepage": "https://qwerty084.github.io/vue3-chessboard-docs/",
+  "description": "vue3-nichessboard is a component library for creating nichess web apps with vue3",
+  "homepage": "https://github.com/nichessgame/vue3-nichessboard",
   "keywords": [
     "vue",
-    "chessboard",
+    "nichessboard",
     "chess",
     "vue3",
-    "lichess",
-    "chessground",
-    "chess.js",
+    "nichess",
+    "nichessground",
     "typescript"
   ],
   "files": [
@@ -35,10 +34,7 @@
     "url": "https://github.com/qwerty084/vue3-chessboard/issues",
     "email": "github@lucahelms.dev"
   },
-  "author": {
-    "name": "Luca Hendrik Helms",
-    "email": "github@lucahelms.dev"
-  },
+  "author": "vue3-chessboard: Luca Hendrik Helms (github@lucahelms.dev), vue3-nichessboard: vasilije2448",
   "scripts": {
     "dev": "vite",
     "build": "vite build && vue-tsc --declaration --emitDeclarationOnly --project tsconfig.app.json && ./format.sh",
@@ -50,8 +46,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore --ignore-path .eslintignore"
   },
   "dependencies": {
-    "chess.js": "^1.0.0-beta.6",
-    "chessground": "^9.0.2"
+    "chess.js": "^1.0.0-beta.6"
   },
   "peerDependencies": {
     "vue": "^3.2.47"

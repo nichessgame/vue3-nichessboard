@@ -1,47 +1,33 @@
 import {
   deepMergeConfig,
-  getThreats,
-  isPromotion,
-  chessJSPieceToLichessPiece,
   possibleMoves,
-  shortToLongColor,
+  keyToSquareIndex,
+  fullRerender,
 } from '@/helper/Board';
 import { defaultBoardConfig } from '@/helper/DefaultConfig';
-import type {
-  BrushColor,
-  CapturedPieces,
-  DrawShape,
-  LichessOpening,
-  MaterialDifference,
-} from '@/typings/BoardAPI';
+import type { BrushColor, DrawShape } from '@/typings/BoardAPI';
 import type BoardConfig from '@/typings/BoardConfig';
 import type {
   BoardState,
   Emits,
   Move,
   MoveEvent,
-  PromotedTo,
   Promotion,
   Props,
-  SquareColor,
 } from '@/typings/Chessboard';
-import {
-  Chess,
-  type Piece,
-  type PieceSymbol,
-  type Color as ShortColor,
-  type Square,
-} from 'chess.js';
-import type { Api } from 'chessground/api';
-import { Chessground } from 'chessground/chessground';
-import type { Color, Key, MoveMetadata, Role } from 'chessground/types';
+import type { Piece, PieceSymbol, Color as ShortColor, Square } from 'chess.js';
+import type { Api } from 'nichessground/api';
+import { Chessground } from 'nichessground/chessground';
+import type { Color, Key, MoveMetadata } from 'nichessground/types';
 import { nextTick } from 'vue';
+
+import { Api as NichessApi, Player, PlayerAction } from 'nichess';
 
 /**
  * class for modifying and reading data from the board
  */
 export class BoardApi {
-  private game: Chess;
+  private game: NichessApi;
   private board: Api;
   private boardState: BoardState;
   private props: Props;
@@ -55,7 +41,7 @@ export class BoardApi {
     this.boardState = boardState;
     this.props = props;
     this.emit = emit;
-    this.game = new Chess();
+    this.game = new NichessApi();
     this.board = Chessground(boardElement);
     this.resetBoard();
   }
@@ -71,7 +57,7 @@ export class BoardApi {
   private updateGameState({ updateFen = true } = {}): void {
     if (!this.boardState.historyViewerState.isEnabled) {
       if (updateFen) {
-        this.board.set({ fen: this.game.fen() });
+        this.board.set({ fen: this.game.boardToString() });
       }
 
       this.board.state.turnColor = this.getTurnColor();
@@ -84,32 +70,9 @@ export class BoardApi {
           this.props.playerColor || this.board.state.turnColor;
         this.board.state.movable.dests = possibleMoves(this.game);
       }
-
-      this.displayInCheck(this.game.inCheck(), this.board.state.turnColor);
-
-      if (this.boardState.showThreats) {
-        this.drawMoves();
-      }
     }
 
     this.emitEvents();
-  }
-
-  /**
-   * Updates the board state to display whether the king of given color is in check
-   * @private
-   */
-  private displayInCheck(inCheck: boolean, color: Color): void {
-    if (inCheck) {
-      for (const [key, piece] of this.board.state.pieces) {
-        if (piece.role === 'king' && piece.color === color) {
-          this.board.state.check = key;
-          return;
-        }
-      }
-    } else {
-      this.board.state.check = undefined;
-    }
   }
 
   /**
@@ -117,19 +80,12 @@ export class BoardApi {
    * @private
    */
   private emitEvents(): void {
-    if (this.game.inCheck()) {
-      this.emit(
-        this.game.isCheckmate() ? 'checkmate' : 'check',
-        this.board.state.turnColor
-      );
-    }
-
-    if (this.game.isDraw()) {
-      this.emit('draw');
-    }
-
-    if (this.game.isStalemate()) {
-      this.emit('stalemate');
+    if (this.game.isGameOver()) {
+      if (this.game.draw()) {
+        this.emit('draw');
+      } else {
+        this.emit('checkmate', this.board.state.turnColor);
+      }
     }
   }
 
@@ -142,17 +98,7 @@ export class BoardApi {
     dest: Key,
     _: MoveMetadata
   ): Promise<void> {
-    let selectedPromotion: Promotion | undefined = undefined;
-    if (isPromotion(dest, this.game.get(orig as Square))) {
-      selectedPromotion = await new Promise((resolve) => {
-        this.boardState.promotionDialogState = {
-          isEnabled: true,
-          color: this.getTurnColor(),
-          callback: resolve,
-        };
-      });
-    }
-
+    const selectedPromotion: Promotion | undefined = undefined;
     this.move({
       from: orig,
       to: dest,
@@ -168,13 +114,34 @@ export class BoardApi {
    * Resets the board to the initial starting configuration.
    */
   resetBoard(): void {
+    this.game.reset();
+    fullRerender(this.board, this.game);
     this.setConfig(this.props.boardConfig as BoardConfig, true);
+  }
+
+  // TODO: This just prevents GUI moves 
+  public forbidMoves(): void {
+    this.board.state.movable.color = undefined;
+  }
+
+  public allowMoves(): void {
+    this.board.state.movable.color = this.board.state.turnColor;
+  }
+
+  /**
+   * String representation of the current game state.
+   */
+  public dump(): string {
+    return this.game.dump();
   }
 
   /**
    * undo last move, if possible
    */
   undoLastMove(): void {
+    // TODO
+    return;
+    /*
     const undoMove = this.game.undo();
     if (undoMove == null) return;
 
@@ -196,62 +163,7 @@ export class BoardApi {
         ? [lastMove?.from, lastMove?.to]
         : undefined;
     }
-  }
-
-  /**
-   * returns the current material count for white, black and the diff.
-   * If diff > 0 white is leading, else black.
    */
-  getMaterialCount(): MaterialDifference {
-    const pieces = this.board.state.pieces;
-    const piecesValues = {
-      pawn: 1,
-      knight: 3,
-      bishop: 3,
-      rook: 5,
-      queen: 9,
-      king: 0,
-    };
-
-    const materialCount = {
-      materialWhite: 0,
-      materialBlack: 0,
-      materialDiff: 0,
-    };
-
-    for (const piece of pieces) {
-      if (piece[1].color === 'white') {
-        materialCount.materialWhite += piecesValues[piece[1].role];
-      } else {
-        materialCount.materialBlack += piecesValues[piece[1].role];
-      }
-    }
-    materialCount.materialDiff =
-      materialCount.materialWhite - materialCount.materialBlack;
-
-    return materialCount;
-  }
-
-  /**
-   * Finds all the captured pieces from the game history.
-   *
-   * Note: results may be innaccurate if game history has been lost, eg. if
-   * setPosition has been called.
-   *
-   * @returns an object with white and black properties whose values are arrays
-   * of all the pieces captured by that player this game.
-   */
-  getCapturedPieces(): CapturedPieces {
-    const capturedPieces: CapturedPieces = {
-      white: [],
-      black: [],
-    };
-
-    for (const { color, captured } of this.getHistory(true)) {
-      if (captured) capturedPieces[shortToLongColor(color)].push(captured);
-    }
-
-    return capturedPieces;
   }
 
   /**
@@ -264,10 +176,12 @@ export class BoardApi {
   /**
    * draws arrows and circles on the board for possible moves/captures
    */
+  /*
   drawMoves(): void {
     this.boardState.showThreats = true;
     this.board.setShapes(getThreats(this.game.moves({ verbose: true })));
   }
+ */
 
   /**
    * removes arrows and circles from the board for possible moves/captures
@@ -293,6 +207,7 @@ export class BoardApi {
   /**
    * toggle drawing of arrows and circles on the board for possible moves/captures
    */
+  /*
   toggleMoves(): void {
     if (this.boardState.showThreats) {
       this.hideMoves();
@@ -300,26 +215,7 @@ export class BoardApi {
       this.drawMoves();
     }
   }
-
-  /**
-   * returns the opening name for the current position from lichess api
-   */
-  async getOpeningName(): Promise<string | null> {
-    try {
-      const history = this.game
-        .history({ verbose: true })
-        .map((move) => move.lan)
-        .join(',');
-      const res = await fetch(
-        `https://explorer.lichess.ovh/masters?play=${history}`
-      );
-      const data: LichessOpening = await res.json();
-
-      return data.opening?.name ?? null;
-    } catch {
-      return null;
-    }
-  }
+ */
 
   /**
    * make a move programmatically on the board
@@ -328,47 +224,25 @@ export class BoardApi {
    * { from: 'e7', to: 'e8', promotion: 'q'}
    * @returns true if the move was made, false if the move was illegal
    */
-  move(move: string | Move): boolean {
-    let moveEvent: MoveEvent;
-
-    try {
-      moveEvent = this.game.move(move);
-    } catch {
-      if (typeof move === 'object' && this.board.state.movable.free) {
-        this.board.move(move.from, move.to);
-        this.updateGameState({ updateFen: false });
-      }
-      return false;
-    }
-
-    this.emit('move', moveEvent);
-    if (moveEvent?.promotion) {
-      this.emit('promotion', {
-        color: shortToLongColor(moveEvent.color),
-        promotedTo: moveEvent.promotion.toUpperCase() as PromotedTo,
-        sanMove: moveEvent.san,
-      });
-    }
-
-    // Only update board if not viewing history
-    if (!this.boardState.historyViewerState.isEnabled) {
-      this.board.move(moveEvent.from, moveEvent.to);
-
-      // if move was a promotion or en passant capture, update position
-      if (moveEvent.flags === 'e' || moveEvent?.promotion) {
-        // if animating, wait until after the animation to update position
-        setTimeout(
-          () => this.board.set({ fen: moveEvent.after }),
-          this.board.state.animation.current
-            ? this.board.state.animation.duration
-            : 0
-        );
+  move(move: string | Move, emitEvent = true): boolean {
+    if (typeof move === 'object') {
+      const srcIdx: number = keyToSquareIndex(move.from);
+      const dstIdx: number = keyToSquareIndex(move.to);
+      this.game.makeAction(srcIdx, dstIdx);
+      this.board.move(move.from, move.to);
+      fullRerender(this.board, this.game);
+      if (emitEvent) {
+        this.emit('move', move as MoveEvent);
       }
       this.updateGameState({ updateFen: false });
       nextTick(this.board.playPremove);
+      if (this.game.isGameOver()) {
+        this.forbidMoves();
+      }
+      return true;
+    } else {
+      return false;
     }
-
-    return true;
   }
 
   /**
@@ -376,7 +250,7 @@ export class BoardApi {
    * @returns 'white' or 'black'
    */
   getTurnColor(): Color {
-    return shortToLongColor(this.game.turn());
+    return this.game.currentPlayer() === Player.PLAYER_1 ? 'white' : 'black';
   }
 
   /**
@@ -412,7 +286,9 @@ export class BoardApi {
    * returns the latest move made on the board
    */
   getLastMove(): MoveEvent | undefined {
-    return this.game.history({ verbose: true }).at(-1);
+    // TODO
+    return undefined;
+    //return this.game.history({ verbose: true }).at(-1);
   }
 
   /**
@@ -425,14 +301,16 @@ export class BoardApi {
   getHistory(verbose: false): string[];
   getHistory(verbose: true): MoveEvent[];
   getHistory(verbose = false): MoveEvent[] | string[] {
-    return this.game.history({ verbose: verbose });
+    // TODO
+    return [];
+    //return this.game.history({ verbose: verbose });
   }
 
   /**
    * Returns the FEN string for the current position.
    */
   getFen(): string {
-    return this.game.fen();
+    return this.game.boardToString();
   }
 
   /**
@@ -443,14 +321,17 @@ export class BoardApi {
     type: PieceSymbol;
     color: ShortColor;
   } | null)[][] {
-    return this.game.board();
+    // TODO
+    return [];
+    //return this.game.board();
   }
 
   /**
    * returns the PGN string for the current position.
    */
   getPgn(): string {
-    return this.game.pgn();
+    // TODO: Nichess doesn't have pgn
+    return this.game.boardToString();
   }
 
   /**
@@ -461,67 +342,30 @@ export class BoardApi {
   }
 
   /**
-   * returns true or false depending on if a player is checkmated
-   */
-  getIsCheckmate(): boolean {
-    return this.game.isCheckmate();
-  }
-
-  /**
-   * returns true or false depending on if a player is in check
-   */
-  getIsCheck(): boolean {
-    return this.game.isCheck();
-  }
-
-  /**
-   * returns true or false depending on if a player is in stalemate
-   */
-  getIsStalemate(): boolean {
-    return this.game.isStalemate();
-  }
-
-  /**
-   * returns true or false depending on if a game is drawn
-   */
-  getIsDraw(): boolean {
-    return this.game.isDraw();
-  }
-
-  /**
-   * returns true or false depending on if a game is drawn by threefold repetition
-   */
-  getIsThreefoldRepetition(): boolean {
-    return this.game.isThreefoldRepetition();
-  }
-
-  /**
-   * returns true or false depending on if a game is drawn by insufficient material
-   */
-  getIsInsufficientMaterial(): boolean {
-    return this.game.isInsufficientMaterial();
-  }
-
-  /**
    * returns the color of a given square
    */
+  /*
   getSquareColor(square: Square): SquareColor {
     return this.game.squareColor(square);
   }
+ */
 
   /**
    * Returns the piece on the square or null if there is no piece
    */
+  /*
   getSquare(square: Square): Piece | null {
     return this.game.get(square);
   }
+ */
 
   /**
    * loads a fen into the board
    * Caution: this will erase the game history. To set position with history call loadPgn with a pgn instead
    */
   setPosition(fen: string): void {
-    this.game.load(fen);
+    // TODO: Nichess doesn't use fen
+    this.game.boardFromString(fen);
     this.boardState.historyViewerState = { isEnabled: false };
     this.updateGameState();
   }
@@ -531,6 +375,9 @@ export class BoardApi {
    * returns true on success, else false
    */
   putPiece(piece: Piece, square: Square): boolean {
+    // TODO
+    return false;
+    /*
     // @TODO using putPiece with the same piece and square twice is buggy in movable: false in chess.js state
     if (this.board.state.movable.free) {
       const current = this.board.state.pieces;
@@ -547,6 +394,7 @@ export class BoardApi {
       }
       return result;
     }
+   */
   }
 
   /**
@@ -554,18 +402,26 @@ export class BoardApi {
    * @param square - The square where the piece is located.
    */
   removePiece(square: Square): void {
+    // TODO
+    return;
+    /*
     const pieces = this.board.state.pieces;
     pieces.delete(square);
     this.game.remove(square);
+   */
   }
 
   /**
    * removes all pieces from the board
    */
   clearBoard(): void {
+    // TODO
+    return;
+    /*
     this.game.clear();
     this.boardState.historyViewerState = { isEnabled: false };
     this.updateGameState();
+   */
   }
 
   /**
@@ -581,6 +437,9 @@ export class BoardApi {
    * @param pgn - the pgn to load
    */
   loadPgn(pgn: string): void {
+    // TODO
+    return;
+    /*
     this.game.loadPgn(pgn);
     this.boardState.historyViewerState = { isEnabled: false };
     this.updateGameState();
@@ -590,6 +449,7 @@ export class BoardApi {
     if (lastMove) {
       this.board.set({ lastMove: [lastMove.from, lastMove.to] });
     }
+   */
   }
 
   /**
@@ -609,7 +469,9 @@ export class BoardApi {
   getPgnInfo(): {
     [key: string]: string | undefined;
   } {
-    return this.game.header();
+    // TODO
+    return {};
+    //return this.game.header();
   }
 
   /**
@@ -620,7 +482,9 @@ export class BoardApi {
   setPgnInfo(changes: { [key: string]: string }): {
     [key: string]: string | undefined;
   } {
-    return this.game.header(...Object.entries(changes).flat());
+    // TODO: Nichess doesn't have pgn
+    return { White: 'Deep Blue', Black: 'Kasparov, Garry' };
+    //return this.game.header(...Object.entries(changes).flat());
   }
 
   /**
@@ -666,6 +530,9 @@ export class BoardApi {
    * after white's first move, 2 is after black's first move and so on.
    */
   viewHistory(ply: number): void {
+    // TODO
+    return;
+    /*
     const history = this.getHistory(true);
 
     // if given ply is invalid, terminate function
@@ -726,6 +593,7 @@ export class BoardApi {
 
     // if animation was disabled, reenable it
     if (disableAnimation) this.board.set({ animation: { enabled: true } });
+   */
   }
 
   /**

@@ -1,8 +1,26 @@
-# vue3-chessboard
+# vue3-nichessboard
 
-[![Unit Tests](https://github.com/qwerty084/vue3-chessboard/actions/workflows/tests.yml/badge.svg)](https://github.com/qwerty084/vue3-chessboard/actions/workflows/tests.yml)
-[![CodeQL](https://github.com/qwerty084/vue3-chessboard/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/qwerty084/vue3-chessboard/actions/workflows/codeql.yml)
-[![npm](https://img.shields.io/npm/v/vue3-chessboard)](https://www.npmjs.com/package/vue3-chessboard)
+This project is a fork of [https://github.com/qwerty084/vue3-chessboard](https://github.com/qwerty084/vue3-chessboard).
+
+1. Clone and compile [nichess-ts](https://github.com/nichessgame/nichess-ts) and [nichessground](https://github.com/nichessgame/nichessground)
+
+2. Install dependencies
+
+```
+npm install
+npm install path-to-nichess-ts/dist
+npm install path-to-nichessground
+```
+Make sure to include the dist part when installing nichess-ts.
+
+3. Build
+```
+npm run build
+```
+
+# Old README
+
+# vue3-chessboard
 
 vue3-chesssboard is a component library for vue 3 built with [lichess chessground](https://github.com/lichess-org/chessground) & [chess.js](https://github.com/jhlywa/chess.js).
 
