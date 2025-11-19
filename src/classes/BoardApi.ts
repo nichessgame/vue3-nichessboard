@@ -128,6 +128,19 @@ export class BoardApi {
     this.board.state.movable.color = this.board.state.turnColor;
   }
 
+  public isMoveLegal(move: any): boolean {
+    let srcIdx: number = keyToSquareIndex(move.from);
+    let dstIdx: number = keyToSquareIndex(move.to);
+
+    let legalActions: PlayerAction[] = this.game.legalActionsBySquare(srcIdx)
+    for(let i = 0; i < legalActions.length; i++) {
+      if(legalActions[i].srcIdx === srcIdx && legalActions[i].dstIdx === dstIdx) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * String representation of the current game state.
    */
