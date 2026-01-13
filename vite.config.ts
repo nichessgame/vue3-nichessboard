@@ -20,6 +20,12 @@ export default defineConfig({
         },
       },
     },
+    minify: 'esbuild',
+  },
+  esbuild: {
+    // Disable identifier minification to avoid conflicts with Vue's 'h' function
+    // when consumed by projects using auto-import
+    minifyIdentifiers: false,
   },
   plugins: [vue()],
   resolve: {
