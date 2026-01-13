@@ -21,7 +21,7 @@ import { Chessground } from 'nichessground/chessground';
 import type { Color, Key, MoveMetadata } from 'nichessground/types';
 import { nextTick } from 'vue';
 
-import { Api as NichessApi, Player, PlayerAction } from 'nichess';
+import { Api as NichessApi, Player, PlayerAction, PieceType } from 'nichess';
 
 /**
  * class for modifying and reading data from the board
@@ -126,6 +126,10 @@ export class BoardApi {
 
   public allowMoves(): void {
     this.board.state.movable.color = this.board.state.turnColor;
+  }
+
+  public setCurrentPlayer(player: Player): void {
+    this.game.setCurrentPlayer(player);
   }
 
   public isMoveLegal(move: any): boolean {
@@ -387,8 +391,13 @@ export class BoardApi {
    * puts a piece on a given square on the board
    * returns true on success, else false
    */
-  putPiece(piece: Piece, square: Square): boolean {
-    // TODO
+  putPiece(pieceType: PieceType, squareIndex: number, healthPoints: number): boolean {
+    const success = this.game.addPiece(pieceType, squareIndex, healthPoints);
+    if(success) {
+      fullRerender(this.board, this.game);
+      this.board.redrawAll();
+      return true;
+    }
     return false;
     /*
     // @TODO using putPiece with the same piece and square twice is buggy in movable: false in chess.js state
