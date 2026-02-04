@@ -2,6 +2,7 @@ import {
   deepMergeConfig,
   possibleMoves,
   keyToSquareIndex,
+  squareIndexToKey,
   fullRerender,
 } from '@/helper/Board';
 import { defaultBoardConfig } from '@/helper/DefaultConfig';
@@ -156,7 +157,17 @@ export class BoardApi {
    * undo last move, if possible
    */
   undoLastMove(): void {
-    // TODO
+    this.game.undoLastAction();
+    this.updateGameState({ updateFen: true });
+    const lastAction: PlayerAction | null = this.game.getLastAction();
+    if(lastAction != null) {
+      const srcKey: Key = squareIndexToKey(lastAction.srcIdx);
+      const dstKey: Key = squareIndexToKey(lastAction.dstIdx);
+      this.board.state.lastMove = [srcKey, dstKey];
+    } else {
+      this.board.state.lastMove = undefined;
+    }
+
     return;
     /*
     const undoMove = this.game.undo();
@@ -181,6 +192,24 @@ export class BoardApi {
         : undefined;
     }
    */
+  }
+
+  /**
+   * redo last move, if possible
+   */
+  redoLastMove(): void {
+    const success: boolean = this.game.redoLastAction();
+    if(!success) {
+      return;
+    }
+    this.updateGameState({ updateFen: true });
+    const lastAction: PlayerAction | null = this.game.getLastAction();
+    if(lastAction != null) {
+      const srcKey: Key = squareIndexToKey(lastAction.srcIdx);
+      const dstKey: Key = squareIndexToKey(lastAction.dstIdx);
+      this.board.state.lastMove = [srcKey, dstKey];
+    }
+    return;
   }
 
   /**
