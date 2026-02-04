@@ -16,13 +16,13 @@ import type {
   Promotion,
   Props,
 } from '@/typings/Chessboard';
-import type { Piece, PieceSymbol, Color as ShortColor, Square } from 'chess.js';
+import type { PieceSymbol, Color as ShortColor, Square } from 'chess.js';
 import type { Api } from 'nichessground/api';
 import { Chessground } from 'nichessground/chessground';
 import type { Color, Key, MoveMetadata } from 'nichessground/types';
 import { nextTick } from 'vue';
 
-import { Api as NichessApi, Player, PlayerAction, PieceType } from 'nichess';
+import { Api as NichessApi, Player, PlayerAction, PieceType, Piece } from 'nichess';
 
 /**
  * class for modifying and reading data from the board
@@ -446,6 +446,13 @@ export class BoardApi {
       return result;
     }
    */
+  }
+
+  getPiece(key: Key): Piece {
+    // convert chess key [a1-h8] to nichess square index [0, 63]
+    const squareIdx: number = keyToSquareIndex(key);
+    const piece: Piece = this.game.pieceBySquare(squareIdx);
+    return piece;
   }
 
   /**
