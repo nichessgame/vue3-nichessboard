@@ -85,7 +85,12 @@ export interface PromotionEvent {
 
 export type PromotedTo = PromotionEvent['promotedTo'];
 
-export type MoveEvent = FullMove;
+export interface MoveEvent {
+  from: Key;
+  to: Key;
+  promotion?: Promotion;
+  attack: boolean;
+}
 
 export type HistoryViewerState =
   | {

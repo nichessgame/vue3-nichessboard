@@ -274,11 +274,19 @@ export class BoardApi {
     if (typeof move === 'object') {
       const srcIdx: number = keyToSquareIndex(move.from);
       const dstIdx: number = keyToSquareIndex(move.to);
+      const dstPiece: Piece = this.game.pieceBySquare(dstIdx);
+      const attack: boolean = dstPiece.type !== PieceType.NO_PIECE;
       this.game.makeAction(srcIdx, dstIdx);
       this.board.move(move.from, move.to);
       fullRerender(this.board, this.game);
       if (emitEvent) {
-        this.emit('move', move as MoveEvent);
+        const moveEvent: MoveEvent = {
+          from: move.from,
+          to: move.to,
+          promotion: move.promotion,
+          attack: attack
+        };
+        this.emit('move', moveEvent);
       }
       this.updateGameState({ updateFen: false });
       nextTick(this.board.playPremove);
