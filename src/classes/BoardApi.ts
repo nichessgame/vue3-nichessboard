@@ -234,14 +234,14 @@ export class BoardApi {
    */
   hideMoves(): void {
     this.boardState.showThreats = false;
-    this.board.setShapes([]);
+    this.board.setAutoShapes([]);
   }
 
   /**
    * draws an arrow on the board
    */
   drawMove(orig: Square, dest: Square, brushColor: BrushColor): void {
-    this.board.setShapes([
+    this.board.setAutoShapes([
       {
         orig: orig,
         dest: dest,
