@@ -419,6 +419,7 @@ export class BoardApi {
    */
   setPosition(fen: string): void {
     // TODO: Nichess doesn't use fen
+    this.board.state.lastMove = undefined;
     this.game.boardFromString(fen);
     this.boardState.historyViewerState = { isEnabled: false };
     this.updateGameState();
