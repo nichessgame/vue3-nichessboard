@@ -17,7 +17,8 @@ export interface BoardConfig {
   addPieceZIndex?: boolean; // adds z-index values to pieces (for 3D)
   addDimensionsCssVarsTo?: HTMLElement; // add --cg-width and --cg-height CSS vars containing the board's dimensions to this element
   blockTouchScroll?: boolean; // block scrolling via touch dragging on the board, e.g. for coordinate training
-  healthText?: cg.HealthTextConfig; // controls health point labels rendered on pieces
+  healthAndAbilityPointsText?: cg.HealthAndAbilityPointsTextConfig; // controls health and ability point text
+  healthText?: cg.HealthTextConfig; // deprecated alias for healthAndAbilityPointsText
   trustAllEvents?: boolean; // wether to check for isTrusted on events
   highlight?: {
     lastMove?: boolean; // add last-move class to squares

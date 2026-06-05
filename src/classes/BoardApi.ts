@@ -422,7 +422,8 @@ export class BoardApi {
     this.board.state.lastMove = undefined;
     this.game.boardFromString(fen);
     this.boardState.historyViewerState = { isEnabled: false };
-    this.updateGameState();
+    this.updateGameState({ updateFen: false });
+    fullRerender(this.board, this.game);
   }
 
   /**

@@ -2,7 +2,13 @@ import type { Move, Piece } from 'chess.js';
 import type { Color, Key } from 'nichessground/types';
 import type { Threat } from '@/typings/Chessboard';
 import type { Api } from 'nichessground/api';
-import { Api as NichessApi, NUM_SQUARES, NUM_ROWS, PieceType } from 'nichess';
+import {
+  Api as NichessApi,
+  NUM_SQUARES,
+  NUM_ROWS,
+  PieceType,
+  pieceTypeToAbilityPoints,
+} from 'nichess';
 
 export function getThreats(moves: Move[]): Threat[] {
   const threats: Threat[] = [];
@@ -179,6 +185,7 @@ export function fullRerender(cg: Api, nichess: NichessApi): void {
         role: nichessTypeToRole(cp.type),
         color: nichessTypeToColor(cp.type),
         healthPoints: cp.healthPoints,
+        abilityPoints: pieceTypeToAbilityPoints(cp.type),
       };
       pieceDiff.set(key, p);
     }
@@ -196,6 +203,7 @@ export function fullRerender(cg: Api, nichess: NichessApi): void {
         role: nichessTypeToRole(cp.type),
         color: nichessTypeToColor(cp.type),
         healthPoints: cp.healthPoints,
+        abilityPoints: pieceTypeToAbilityPoints(cp.type),
       };
       pieceDiff.set(key, p);
     }

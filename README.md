@@ -18,10 +18,10 @@ Make sure to include the dist part when installing nichess-ts.
 npm run build
 ```
 
-## Nichess health text themes
+## Nichess health and ability points text
 
-`TheChessboard` passes `boardConfig.healthText` through to nichessground.
-Use it to control the health point labels rendered on pieces:
+`TheChessboard` passes `boardConfig.healthAndAbilityPointsText` through to nichessground.
+Use it to control health and ability point text rendered on pieces:
 
 ```vue
 <script setup lang="ts">
@@ -30,9 +30,10 @@ import { TheChessboard } from 'vue3-nichessboard';
 import 'vue3-nichessboard/style.css';
 
 const boardConfig = reactive({
-  healthText: {
-    visible: true,
-    theme: 'strong',
+  healthAndAbilityPointsText: {
+    healthPointsVisible: true,
+    theme: 'standard',
+    abilityPointsVisible: true,
   },
 });
 </script>
@@ -42,7 +43,8 @@ const boardConfig = reactive({
 </template>
 ```
 
-Available `theme` values are `strong` and `gold`.
+Available `theme` values are `standard` and `strong`.
+Set `abilityPointsVisible` to show ability points in addition to health points.
 Set `reactive-config` when changing the theme after the board has been created.
 
 # Old README
