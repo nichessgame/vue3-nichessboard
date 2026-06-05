@@ -29,6 +29,10 @@ export const defaultBoardConfig: BoardConfig = {
   disableContextMenu: false,
   addPieceZIndex: false,
   blockTouchScroll: false,
+  healthText: {
+    visible: true,
+    theme: 'strong',
+  },
   highlight: {
     lastMove: true,
     check: true,

@@ -1,6 +1,6 @@
 .cg-wrap {
-  width: 1000px;
-  height: 1000px;
+  width: 4000px; /* was 1000 */
+  height: 4000px;
 }
 
 .main-board {
@@ -396,8 +396,8 @@ cg-board .king.black {
 
 @media (orientation: landscape) {
   .main-wrap {
-    width: 80vh;
+    width: 80vh; 
     margin-inline: auto;
-    max-width: 960px;
+    max-width: 2160px; /* was 960 */
   }
 }

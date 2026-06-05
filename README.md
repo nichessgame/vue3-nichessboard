@@ -18,6 +18,33 @@ Make sure to include the dist part when installing nichess-ts.
 npm run build
 ```
 
+## Nichess health text themes
+
+`TheChessboard` passes `boardConfig.healthText` through to nichessground.
+Use it to control the health point labels rendered on pieces:
+
+```vue
+<script setup lang="ts">
+import { reactive } from 'vue';
+import { TheChessboard } from 'vue3-nichessboard';
+import 'vue3-nichessboard/style.css';
+
+const boardConfig = reactive({
+  healthText: {
+    visible: true,
+    theme: 'strong',
+  },
+});
+</script>
+
+<template>
+  <TheChessboard :board-config="boardConfig" :reactive-config="true" />
+</template>
+```
+
+Available `theme` values are `strong` and `gold`.
+Set `reactive-config` when changing the theme after the board has been created.
+
 # Old README
 
 # vue3-chessboard
