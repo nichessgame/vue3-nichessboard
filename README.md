@@ -32,7 +32,7 @@ import 'vue3-nichessboard/style.css';
 const boardConfig = reactive({
   healthAndAbilityPointsText: {
     healthPointsVisible: true,
-    theme: 'standard',
+    theme: 'light-gold-2',
     abilityPointsVisible: true,
   },
 });
@@ -43,7 +43,7 @@ const boardConfig = reactive({
 </template>
 ```
 
-Available `theme` values are `standard` and `strong`.
+Available `theme` values are `light-gold-1`, `light-gold-2`, `dark-gold-1`, and `dark-gold-2`.
 Set `abilityPointsVisible` to show ability points in addition to health points.
 Set `reactive-config` when changing the theme after the board has been created.
 

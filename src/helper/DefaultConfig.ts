@@ -31,7 +31,7 @@ export const defaultBoardConfig: BoardConfig = {
   blockTouchScroll: false,
   healthAndAbilityPointsText: {
     healthPointsVisible: true,
-    theme: 'standard',
+    theme: 'light-gold-2',
     abilityPointsVisible: false,
   },
   highlight: {
